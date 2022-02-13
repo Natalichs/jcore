@@ -7,6 +7,8 @@ import com.squareup.okhttp.Response;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class WeatherRequest {
 
@@ -43,7 +45,7 @@ public class WeatherRequest {
 
     }
 
-    public static void get1dayWeather(String city) throws IOException {
+    public static Weather get1dayWeather(String city) throws IOException {
         String keyCity = getCityId(city);
         HttpUrl weaterFor1day = new HttpUrl.Builder()
                 .scheme(scheme)
@@ -68,11 +70,13 @@ public class WeatherRequest {
         double tmin = objectMapper.readTree(jsonWeather).at("/DailyForecasts").get(0).at("/Temperature/Minimum/Value").asDouble();
         double tmax = objectMapper.readTree(jsonWeather).at("/DailyForecasts").get(0).at("/Temperature/Maximum/Value").asDouble();
         double tmiddle=(tmin+tmax)/2;
-        String wText = objectMapper.readTree(jsonWeather).at("/DailyForecasts").get(0).at("/Day/PrecipitationType").asText();
-        System.out.printf("В городе %s на дату %s ожидается %s, средняя температура - %s C  \n \n",city,date,wText,tmiddle);
+        String wText = objectMapper.readTree(jsonWeather).at("/DailyForecasts").get(0).at("/Day/IconPhrase").asText();
+        Weather weather = new Weather(city,date,wText,tmiddle);
+        //System.out.printf("В городе %s на дату %s ожидается %s, средняя температура - %s C  \n \n",city,date,wText,tmiddle);
+        return weather;
 
     }
-    public static void get5dayWeather(String city) throws IOException{
+    public static List<Weather> get5dayWeather(String city) throws IOException{
         String keyCity = getCityId(city);
         HttpUrl weatherFor5day = new HttpUrl.Builder()
                 .scheme(scheme)
@@ -99,16 +103,19 @@ public class WeatherRequest {
         double[] tmax = new double[5];
         double[] tmiddle = new double[5];;
         String[] wText = new String[5];
+        List<Weather> weathers = new ArrayList<>();
 
         for (int i = 0; i < 5; i++) {
             date[i] = objectMapper.readTree(jsonWeather).at("/DailyForecasts").get(i).at("/Date").asText();
             tmin[i] = objectMapper.readTree(jsonWeather).at("/DailyForecasts").get(i).at("/Temperature/Minimum/Value").asDouble();
             tmax[i] = objectMapper.readTree(jsonWeather).at("/DailyForecasts").get(i).at("/Temperature/Maximum/Value").asDouble();
             tmiddle[i]=(tmin[i] + tmax[i])/2;
-            wText[i] = objectMapper.readTree(jsonWeather).at("/DailyForecasts").get(i).at("/Day/PrecipitationType").asText();
-            System.out.printf("В городе %s на дату %s ожидается %s, средняя температура - %s C  \n",city,date[i],wText[i],tmiddle[i]);
+            wText[i] = objectMapper.readTree(jsonWeather).at("/DailyForecasts").get(i).at("/Day/IconPhrase").asText();
+            weathers.add(new Weather(city,date[i],wText[i],tmiddle[i]));
+            //System.out.printf("В городе %s на дату %s ожидается %s, средняя температура - %s C  \n",city,date[i],wText[i],tmiddle[i]);
 
         }
+        return weathers;
 
 
 
